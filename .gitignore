@@ -1,0 +1,14 @@
+**/node_modules
+**/.terraform
+.idea
+.serverless
+config.json
+**/.terraform.lock.hcl
+**/dist
+**/tmp
+**/*.js
+**/*.zip
+**/environment.ts
+**/environment.prod.ts
+**/.DS_Store
+deploy

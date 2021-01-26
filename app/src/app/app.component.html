@@ -1,0 +1,76 @@
+<div class="container d-flex text-center">
+  <div class="row align-self-center w-100">
+    <div class="mx-auto">
+      <div class="jumbotron content">
+        <h2 *ngIf="apiService.processing" class="loading-text">
+          <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+        </h2>
+        <div *ngIf="!apiService.processing">
+          <!-- PAYOUT_ALREADY_PROCESSED_TODAY -->
+          <div *ngIf="apiService.state?.paymentState === 'PAYOUT_ALREADY_PROCESSED_TODAY'">
+            <img class="image" src="../assets/this-is-fine.jpg"/>
+            <h1>There's already a winner for today! 🎉️</h1>
+            <h4>@hylianer <strong class="text-danger">failed</strong> to get up early today! 🙋‍♂</h4>
+          </div>
+          <!-- PAYOUT_POSSIBLE -->
+          <div *ngIf="apiService.state?.paymentState === 'PAYOUT_POSSIBLE'">
+            <img class="image" src="../assets/fry-suspicious.png"/>
+            <h1>We're pre judgment time and there's no confirmation yet!️</h1>
+            <h4>Price Today: {{ apiService.state.priceToday }}€</h4>
+            <h4>Judgement Time: {{ momentFormat(apiService.state.judgementTimeToday, 'HH:mm') }}</h4>
+            <h4>Time left for @hylianer: <strong class="text-success">{{ getRemainingTimeMinutes() }} minutes </strong></h4>
+          </div>
+          <!-- PAYOUT_AVAILABLE -->
+          <div *ngIf="apiService.state?.paymentState === 'PAYOUT_AVAILABLE'">
+            <img class="image" src="../assets/fry.png"/>
+            <h1>Payout available 🤑</h1>
+            <h4>Judgement time passed & there was <strong class="text-danger">no confirmation</strong>!</h4>
+            <h4>Please enter your <strong class="text-warning">PayPal address</strong> & you'll receive <strong class="text-success">{{ apiService.state.priceToday }}</strong>€ from me today 🙋‍♂️</h4>
+            <form [formGroup]="form" [class.submitted]="formSubmitted" class="mt-12">
+              <input type="email" class="form-control" formControlName="paypalAddress" id="paypalAddress" placeholder="Your PayPal Address" [(ngModel)]="paypalAddress">
+              <input type="text" class="form-control" formControlName="name" id="name" placeholder="Name / Twitter Handle (optional)" [(ngModel)]="name">
+              <button type="button" class="btn btn-success" (click)="requestPayment()"
+                      [disabled]="form.invalid">
+                {{ formSubmitted ? buttonTextSubmitted : buttonText }}
+              </button>
+            </form>
+          </div>
+          <!-- PAYOUT SKIPPED -->
+          <div *ngIf="apiService.state?.paymentState === 'PAYOUT_SKIPPED_TODAY'">
+            <img class="image" src="../assets/spongebob-rainbow.jpg"/>
+            <h1>@hylianer did not fail today!️ 🎉</h1>
+            <h4>Judgement Time for Today was at {{ momentFormat(apiService.state.judgementTimeToday, 'HH:mm')}} 👨‍⚖️</h4>
+            <h4>Confirmation was sent at {{ momentFormat(apiService.state.lastConfirmation, 'HH:mm') }}</h4>
+          </div>
+          <br>
+          <div>
+            <h4>Previous Winners 🎉</h4>
+            <hr>
+            <h4 class="center" *ngIf="!apiService.state?.lastPayouts?.length">None yet 🤷‍♂️</h4>
+            <table class="table" *ngIf="apiService.state?.lastPayouts?.length">
+              <thead>
+              <tr>
+                <th scope="col">Who</th>
+                <th scope="col">When</th>
+                <th scope="col">Price</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let payout of apiService.state?.lastPayouts">
+                <td class="refs">{{ payout.name }}</td>
+                <td>{{ getFormattedTimestamp(payout.timestamp) }}</td>
+                <td>{{ payout.value }}€</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fixed-bottom footer">
+      <hr>
+      Switching from working 100% on-site to fully remote really does not help to get up early.
+      This project will help... or make me homeless. 🤷‍♂️
+    </div>
+  </div>
+</div>

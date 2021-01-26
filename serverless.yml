@@ -1,0 +1,120 @@
+service: sls-${file(config.json):app_name}
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-plugin-resource-tagging
+  - serverless-domain-manager
+
+custom:
+  appName: sls-${file(config.json):app_name}
+  # You have to run sls create_domain --stage=<stage-name> before running serverless deploy the first time
+  customDomain:
+    http:
+      certificateName: ${file(config.json):domain_name}
+      domainName: ${file(config.json):app_name}-api.${self:custom.customDomain.http.certificateName}
+      basePath: ''
+      stage: ${self:provider.stage}
+      endpointType: regional
+      createRoute53Record: true
+      securityPolicy: tls_1_2
+
+provider:
+  name: aws
+  httpApi:
+    cors: true
+  apiGateway:
+    shouldStartNameWithService: true
+  stackTags:
+    App: sls-${file(config.json):app_name}
+    CreatedVia: 'Serverless'
+  versionFunctions: true
+  stage: ${opt:stage, 'prod'}
+  region: eu-central-1
+  logs:
+    restApi: true
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - ssm:*
+      Resource:
+        - arn:aws:ssm:*:#{AWS::AccountId}:parameter/${self:custom.appName}*
+
+package:
+  individually: true
+
+layers:
+  common:
+    package:
+      artifact: deploy/common.zip
+    name: ${self:custom.appName}-common
+    description: Common dependencies for Lambdas
+    compatibleRuntimes:
+      - nodejs12.x
+    retain: false
+
+functions:
+  api:
+    package:
+      artifact: deploy/api.zip
+    handler: dist/lambda-proxy.handler
+    name: ${self:custom.appName}-api
+    description: Function which reminds you to get up early!
+    reservedConcurrency: 5
+    runtime: nodejs12.x
+    layers:
+      - { Ref: CommonLambdaLayer }
+    memorySize: 512
+    timeout: 15
+    environment:
+      ACCOUNT_ID: '#{AWS::AccountId}'
+      API_SECRET: ${file(config.json):api_secret}
+      JUDGMENT_TIME_UTC: ${file(config.json):judgement_time_utc}
+      DOMAIN_NAME: ${file(config.json):app_name}.${file(config.json):domain_name}
+      APP_NAME: ${self:custom.appName}
+      MAX_PRICE: ${file(config.json):max_price}
+      MIN_PRICE: ${file(config.json):min_price}
+      TWITTER_CONSUMER_API_KEY: ${file(config.json):twitter_consumer_api_key}
+      TWITTER_CONSUMER_API_SECRET_KEY: ${file(config.json):twitter_consumer_api_key_secret}
+      TWITTER_API_ACCESS_TOKEN: ${file(config.json):twitter_api_access_token}
+      TWITTER_API_ACCESS_SECRET: ${file(config.json):twitter_api_access_secret}
+      TWITTER_API_BEARER_TOKEN: ${file(config.json):twitter_api_bearer_token}
+    events:
+      - httpApi:
+          path: /api/{proxy+}
+          method: POST
+      - httpApi:
+          path: /api/{proxy+}
+          method: GET
+      - schedule:
+          rate: rate(10 minutes)
+
+resources:
+  Resources:
+    LastConfirmation:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Description: Last time confirmed
+        Name: /${self:custom.appName}/last-confirmation-time
+        Type: String
+        Value: 1610796873
+    LastPayouts:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Description: Last payouts
+        Name: /${self:custom.appName}/last-payouts
+        Type: String
+        Value: '[]'
+    PriceToday:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Description: Price for today
+        Name: /${self:custom.appName}/price-today
+        Type: String
+        Value: '5'
+    LastTweetPosted:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Description: Timestamp of last tweeted post
+        Name: /${self:custom.appName}/last-tweet
+        Type: String
+        Value: '20190101000000'

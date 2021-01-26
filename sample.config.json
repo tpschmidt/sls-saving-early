@@ -1,0 +1,14 @@
+{
+  "domain_name": "tpschmidt.com",
+  "app_name": "saving-early",
+  "aws_account_id": "0123456789",
+  "api_secret": "...",
+  "judgement_time_utc": "06:00",
+  "min_price": 1,
+  "max_price": 25,
+  "twitter_consumer_api_key": "...",
+  "twitter_consumer_api_key_secret": "...",
+  "twitter_api_access_token": "...",
+  "twitter_api_access_secret": "...",
+  "twitter_api_bearer_token": "..."
+}

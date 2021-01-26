@@ -1,0 +1,12 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "rm -rf dist && ../../node_modules/.bin/nest build",
+    "archive": "rm -f ../../deploy/api.zip && zip -rq ../../deploy/api.zip dist/*"
+  }
+}
