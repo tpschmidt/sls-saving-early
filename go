@@ -188,7 +188,7 @@ function goal_deploy-app() {
 }
 
 function goal_confirm() {
-    aws ssm put-parameter --name /${APP_NAME}/last-confirmation-time --overwrite --region=eu-central-1 --value "$(date +%s)" --output text
+    aws ssm put-parameter --name /${APP_NAME}/last-confirmation-time --overwrite --region=eu-central-1 --value "$(date -u +%Y%m%d%H%M%S)" --output text
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
